@@ -1,0 +1,147 @@
+# TP-Empresa
+
+Esta aplicación web permite a la tienda TP-Empresa digitalizar sus procesos de inventario, incluyendo funcionalidades avanzadas de gestión y análisis de datos.
+
+## Tabla de Contenidos
+
+- [Tecnologías Utilizadas](#tecnologías-utilizadas)
+- [Requisitos Previos](#requisitos-previos)
+- [Configuración con Docker](#configuración-con-docker)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Registro e Inicio de Sesión](#registro-e-inicio-de-sesión)
+- [Gestión de Empresas](#gestión-de-empresa)
+- [Gestión de Usuarios](#gestión-de-usuarios) 
+- [Gestión de Transferencias](#gestión-de-transferencias) 
+- [Arquitectura del Sistema](#arquitectura-del-sistema)
+- [Modelo de Datos](#modelo-de-datos)
+- [Testing](#testing)
+- [Despliegue](#despliegue)
+- [Documentación de la API](#documentación-de-la-api)  
+
+## Tecnologías Utilizadas
+
+-   Frontend: React (TypeScript), Axios, antd
+-   Backend: NestJS (TypeScript), JWT
+-   Base de Datos: MySQL, TypeORM ORM
+-   Docker, Docker Compose
+-   Swagger/OpenAPI
+
+## Requisitos Previos
+
+-   Docker y Docker Compose instalados en tu sistema.
+-   Node.js y npm (opcional, para desarrollo local sin Docker).
+
+## Configuración con Docker
+
+1.  Clona el repositorio:
+
+    ```bash
+    git clone https://github.com/jasteeman/tp-libros
+    cd tp-libros
+    ```
+
+2.  Construye y levanta los contenedores con Docker Compose:
+
+    ```bash
+    docker-compose up --build -d
+    ```
+
+3.  El frontend estará disponible en `http://localhost` y el backend en `http://localhost:3000`.
+
+## Estructura del Proyecto
+
+tp-empresa/
+├── backend/  
+    ├── src/
+    │   ├── auth/
+    │   ├── common/
+    │   ├── empresas/
+    │   │   ├── application/
+    │   │   ├── domain/
+    │   │   └── infrastructure/
+    │   ├── transferencias/
+    │   │   ├── application/
+    │   │   ├── domain/
+    │   │   └── infrastructure/
+    │   ├── users/
+    │   │   ├── application/
+    │   │   ├── domain/
+    │   │   └── infrastructure/
+    │   ├── app.controller.ts
+    │   ├── app.module.ts
+    │   ├── app.service.ts
+    │   ├── main.ts
+    ├── test/
+    ├── .env
+    ├── .eslintrc.js
+    ├── .prettierrc
+    ├── nest-cli.json
+    ├── package.json
+    ├── README.md
+    ├── tsconfig.build.json
+    └── tsconfig.json
+    ├── frontend/
+    │   ├── src/
+    │   │   ├── pages/
+    │   │   │   ├── User.tsx
+    │   │   │   ├── Home.tsx
+    │   │   │   ├── Libro.tsx
+    │   │   │   ├── Login.tsx
+    │   │   ├── App.tsx
+    │   ├── public/
+    │   ├── package.json
+├── docker-compose.yml
+└── README.md
+
+## Gestión de Usuarios
+    Creación de Usuarios: Permite registrar nuevos usuarios con nombre de usuario, email y contraseña.
+    Listado de Usuarios:
+    Implementa paginación del lado del servidor con parámetros page y limit.
+    Permite filtrar usuarios utilizando un parámetro de búsqueda q (LIKE en username, nombre, apellido).
+    Obtener Usuario por ID: Permite obtener los detalles de un usuario específico por su ID.
+    Actualización de Usuarios: Permite actualizar la información de un usuario existente.
+    Eliminación de Usuarios: Permite eliminar un usuario por su ID.
+
+## Gestión de Empresas
+    Creación de Empresas: Permite registrar nuevas empresas con CUIT, razón social y fecha de adhesión.
+    Listado de Empresas:
+    Implementa paginación del lado del servidor con parámetros page y limit.
+    Permite filtrar empresas utilizando un parámetro de búsqueda q (LIKE en nombre, dirección, CUIT, razón social).
+    Obtener Empresa por ID: Permite obtener los detalles de una empresa específica por su ID.
+    Actualización de Empresas: Permite actualizar la información de una empresa existente.
+    Eliminación de Empresas: Permite eliminar una empresa por su ID.
+
+## Gestión de Transferencias
+    Registro de Transferencias: Permite registrar nuevas transferencias asociadas a una empresa, con importe, cuentas de débito y crédito.
+    Listado de Transferencias:
+    Implementa paginación del lado del servidor con parámetros page y limit.
+    Permite filtrar transferencias utilizando un parámetro de búsqueda q (LIKE en campos relevantes como cuentas, importe, etc. - especifica los campos si es necesario).
+    Obtener Transferencia por ID: Permite obtener los detalles de una transferencia específica por su ID.
+
+## Arquitectura del Sistema
+
+-   El backend utiliza una arquitectura hexagonal y escalable, separando las capas de dominio, aplicación e infraestructura.
+-   Se implementa un sistema de logging para auditoría de operaciones.
+-   Se utiliza NestJS como framework, promoviendo una estructura modular y organizada.
+-   La autenticación se implementa mediante JWT (JSON Web Tokens) para asegurar las rutas protegidas.
+-   Se implementa un sistema de logging para el seguimiento de las operaciones y posibles errores.
+-   Se utiliza TypeORM como ORM para interactuar con la base de datos.
+-   El manejo de errores está centralizado mediante filtros de excepción de NestJS.
+
+## Modelo de Datos
+
+-   Se utiliza MySQL con TypeORM ORM.
+-   El modelo de datos incluye las entidades Usuario, Empresa y Transferencia, con sus respectivas propiedades y relaciones.
+-   Se utilizan [Menciona si usas validaciones en las entidades o DTOs con class-validator].
+
+## Testing
+
+-   Se crean tests unitarios para servicios y controladores en NestJS.
+
+## Despliegue
+
+-   Se proporciona un `docker-compose.yml` para el despliegue local de todo el stack. 
+
+## Documentación de la API
+
+-   La API está documentada utilizando Swagger en el siguiente link http://localhost:3000/api
