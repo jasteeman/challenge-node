@@ -1,4 +1,6 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, Inject, Query } from '@nestjs/common'; 
+import { Controller, Post, Body, Get, Param, Patch, Delete, Inject, Query, UseGuards } from '@nestjs/common'; 
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/infrastructure/guards/jwt-auth.guard';
 import { PaginatedResult, PaginationOptions } from 'src/common/utils/paginations.utils';
 import { CreateUserDto, UpdateUserDto } from 'src/users/application/dto';
 import { User } from 'src/users/domain/entities/user.entity';
@@ -8,6 +10,8 @@ import { GetAllUsersUseCase } from 'src/users/domain/ports/in/get-all-users.use-
 import { GetUserByIdUseCase } from 'src/users/domain/ports/in/get-user-by-id.use-case';
 import { UpdateUserUseCase } from 'src/users/domain/ports/in/update-user.use-case';
 
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(

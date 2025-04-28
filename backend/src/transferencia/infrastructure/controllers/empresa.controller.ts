@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Put, Delete, UsePipes, ValidationPipe, Inject, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put, Delete, UsePipes, ValidationPipe, Inject, Query, UseGuards } from '@nestjs/common';
 import { Empresa } from '../../domain/entities/empresa.entity';
 import { CreateEmpresaDto } from '../../application/dto/create-empresa.dto';
 import { UpdateEmpresaDto } from '../../application/dto/update-empresa.dto';
@@ -10,8 +10,11 @@ import { PaginatedResult, PaginationOptions } from 'src/common/utils/paginations
 import { ListaEmpresasUseCase } from 'src/transferencia/domain/ports/in/lista-empresas.use-case';
 import { ObtenerEmpresaConTransferenciaUseCase } from 'src/transferencia/domain/ports/in/obtener-empresa-con-transferencia.use-case';
 import { ObtenerEmpresaAdheridaUseCase } from 'src/transferencia/domain/ports/in/obtener-empresa-adherida.use-case';
-import { SearchEmpresaUseCase } from 'src/transferencia/domain/ports/in/search-empresa.use-case';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/infrastructure/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 @Controller('empresas')
 @UsePipes(new ValidationPipe())
 export class EmpresaController {
