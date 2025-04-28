@@ -36,8 +36,8 @@ Esta aplicación web permite a la tienda TP-Empresa digitalizar sus procesos de 
 1.  Clona el repositorio:
 
     ```bash
-    git clone https://github.com/jasteeman/tp-libros
-    cd tp-libros
+    git https://github.com/jasteeman/challenge-node
+    cd challenge-node
     ```
 
 2.  Construye y levanta los contenedores con Docker Compose:
