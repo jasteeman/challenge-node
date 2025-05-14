@@ -76,7 +76,7 @@ describe('TransferenciaModule Integration Test', () => {
       const createEmpresaDto: CreateEmpresaDto = {
         cuit: '30-12345678-9',
         razonSocial: 'Empresa de Prueba',
-        fechaAdhesion: new Date().toISOString(),
+        fechaAdhesion: new Date(),
       };
 
       const empresa = await empresaService.registrarEmpresa(createEmpresaDto);
@@ -90,7 +90,7 @@ describe('TransferenciaModule Integration Test', () => {
       const createEmpresaDto: CreateEmpresaDto = {
         cuit: '30-98765432-1',
         razonSocial: 'Empresa Test',
-        fechaAdhesion: new Date().toISOString(),
+        fechaAdhesion: new Date(),
       };
       const createdEmpresa = await empresaService.registrarEmpresa(createEmpresaDto);
 
@@ -105,7 +105,7 @@ describe('TransferenciaModule Integration Test', () => {
       const createEmpresaDto: CreateEmpresaDto = {
         cuit: '30-11111111-1',
         razonSocial: 'Empresa para Transferencia',
-        fechaAdhesion: new Date().toISOString(),
+        fechaAdhesion: new Date(),
       };
       const empresa = await empresaService.registrarEmpresa(createEmpresaDto);
 

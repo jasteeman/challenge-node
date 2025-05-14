@@ -49,7 +49,7 @@ export class EmpresaService {
       return undefined;
     }
 
-    const empresaActualizada: Partial<Empresa> = {};
+    const empresaActualizada: Partial<Empresa> = {fechaAdhesion:new Date(updateEmpresaDto.fechaAdhesion)};
     if (updateEmpresaDto.cuit) {
       if (!/^\d{2}-\d{8}-\d{1}$/.test(updateEmpresaDto.cuit)) {
         throw new BadRequestException('El CUIT tiene un formato inválido.');

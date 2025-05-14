@@ -117,7 +117,7 @@ export const TransferenciaPage = () => {
         setFormLoading(true);
         try {
             if (editingTransferencia?.id) {
-                const updated = await updateTransferencia(editingTransferencia.id, values);
+                const updated = await updateTransferencia(editingTransferencia.id, {...values,importe: Number(values.importe),idEmpresa:Number(id)});
                 if (updated) {
                     message.success("Transferencia actualizada exitosamente");
                 }

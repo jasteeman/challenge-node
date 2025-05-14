@@ -14,6 +14,8 @@ import debounce from 'lodash/debounce';
 import EmpresaForm from '../components/empresa/EmpresaForm';
 import { GetProp } from 'antd/lib';
 import { Link } from 'react-router-dom';
+import moment from 'moment';
+import { format } from 'date-fns';
 
 type TablePaginationConfig = Exclude<GetProp<TableProps, "pagination">, boolean>;
 
@@ -189,8 +191,12 @@ export const GestionEmpresa = () => {
       dataIndex: "fechaAdhesion",
       width: "25%",
       responsive: ["md", "sm", "xs"],
-      render: (fechaAdhesion: string) => new Date(fechaAdhesion).toLocaleDateString(),
-      sorter: (a, b) => new Date(a.fechaAdhesion).getTime() - new Date(b.fechaAdhesion).getTime(),
+      render: (fecha: string) => {
+        if (!fecha) return 'N/A';
+        const fechaObj = new Date(fecha);
+        fechaObj.setDate(fechaObj.getDate() + 1);
+        return format(fechaObj, 'dd/MM/yyyy HH:mm:ss');
+      }
     },
     {
       title: "Acciones",
@@ -239,7 +245,7 @@ export const GestionEmpresa = () => {
         rowKey="id"
       />
       <Modal
-        title={editingEmpresa ? `Editar Empresa ${selectedEmpresaId??""}` : "Nueva Empresa"}
+        title={editingEmpresa ? `Editar Empresa ${selectedEmpresaId ?? ""}` : "Nueva Empresa"}
         open={isModalOpen}
         onCancel={handleCancelModal}
         footer={null}

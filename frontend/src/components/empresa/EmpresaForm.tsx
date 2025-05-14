@@ -22,6 +22,15 @@ const EmpresaForm: React.FC<EmpresaFormProps> = ({ initialValues, onSubmit, onCa
       setCuitValue("");
       form.resetFields(["cuit"]);
     }
+          const formattedInitialValues = initialValues
+            ? {
+                ...initialValues,
+                fechaAdhesion: initialValues.fechaAdhesion
+                  ? new Date(initialValues.fechaAdhesion).toISOString().substring(0, 10)
+                  : undefined,
+              }
+            : undefined;
+          form.setFieldsValue(formattedInitialValues);
   }, [initialValues, form]);
 
   const formatCUIT = (value: string): string => {
@@ -42,9 +51,13 @@ const EmpresaForm: React.FC<EmpresaFormProps> = ({ initialValues, onSubmit, onCa
     form.setFieldsValue({ cuit: formatted });
   }, [form]);
 
-  const handleFinish = (values: Empresa) => {
-    console.log(values,cuitValue)
-    onSubmit({ ...values});
+  const handleFinish = (values: any) => {
+    const formattedValues: Empresa = {
+      ...values,
+      cuit: cuitValue,
+      fechaAdhesion: values.fechaAdhesion ? new Date(values.fechaAdhesion) : undefined, // Format
+    };
+    onSubmit(formattedValues);
   };
 
   return (

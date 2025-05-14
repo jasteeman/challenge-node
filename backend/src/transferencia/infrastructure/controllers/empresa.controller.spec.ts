@@ -95,7 +95,7 @@ describe('EmpresaController', () => {
 
   describe('registrar', () => {
     it('should call registrarEmpresaUseCase.registrarEmpresa and return the created empresa', async () => {
-      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: '2024-01-01' };
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: new Date('2024-03-05'), };
       const expectedEmpresa: Empresa = { id: 1, ...createEmpresaDto, fechaAdhesion: new Date() };
       jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockResolvedValue(expectedEmpresa);
 
@@ -106,7 +106,7 @@ describe('EmpresaController', () => {
     });
 
     it('should throw HttpException with BAD_REQUEST status if registrarEmpresaUseCase throws an error', async () => {
-      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: '2024-01-01' };
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: new Date('2024-03-05'), };
       jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockRejectedValue(new Error('Registration failed'));
 
       await expect(controller.registrar(createEmpresaDto)).rejects.toThrowError(HttpException);
@@ -114,7 +114,7 @@ describe('EmpresaController', () => {
     });
 
     it('should throw HttpException with INTERNAL_SERVER_ERROR status if registrarEmpresaUseCase throws an unknown error', async () => {
-      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: '2024-01-01' };
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: new Date('2024-03-05'), };
       const error = new Error('Unknown server error');
       jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockRejectedValue(error);
 
@@ -220,7 +220,7 @@ describe('EmpresaController', () => {
 
   describe('actualizar', () => {
     const empresaId = '1';
-    const updateEmpresaDto: UpdateEmpresaDto = { razonSocial: 'Updated Name' };
+    const updateEmpresaDto: UpdateEmpresaDto = { razonSocial: 'Updated Name',fechaAdhesion: new Date() };
     const updatedEmpresa = { id: 1, razonSocial: 'Updated Name' } as Empresa;
 
     it('should call actualizarEmpresaUseCase.actualizarEmpresa with the parsed id and dto', async () => {

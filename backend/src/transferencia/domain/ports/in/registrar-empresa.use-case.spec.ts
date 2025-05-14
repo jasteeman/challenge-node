@@ -37,7 +37,7 @@ describe('RegistrarEmpresaUseCase', () => {
     const createEmpresaDto: CreateEmpresaDto = {
       cuit: '30-12345678-9',
       razonSocial: 'Empresa de Prueba',
-      fechaAdhesion: '2024-01-01',
+      fechaAdhesion: new Date('2024-03-05'),
     };
     const savedEmpresa: Empresa = {
       id: 1,
@@ -60,7 +60,7 @@ describe('RegistrarEmpresaUseCase', () => {
     const createEmpresaDto: CreateEmpresaDto = {
       cuit: 'invalid-cuit',
       razonSocial: 'Empresa de Prueba',
-      fechaAdhesion: '2024-01-05',
+      fechaAdhesion: new Date('2024-03-05'),
     };
 
     await expect(registrarEmpresaUseCase.registrarEmpresa(createEmpresaDto)).rejects.toThrow(BadRequestException);
@@ -72,7 +72,7 @@ describe('RegistrarEmpresaUseCase', () => {
     const createEmpresaDto: CreateEmpresaDto = {
       cuit: '30-12345678-9',
       razonSocial: '',
-      fechaAdhesion: '2024-02-15',
+      fechaAdhesion: new Date('2024-03-05'),
     };
 
     await expect(registrarEmpresaUseCase.registrarEmpresa(createEmpresaDto)).rejects.toThrow(BadRequestException);
@@ -84,7 +84,7 @@ describe('RegistrarEmpresaUseCase', () => {
     const createEmpresaDto: CreateEmpresaDto = {
       cuit: '30-12345678-9',
       razonSocial: 'Empresa de Prueba',
-      fechaAdhesion: '2024-03-05',
+      fechaAdhesion: new Date('2024-03-05'),
     };
     const existingEmpresa: Empresa = {
       id: 1,

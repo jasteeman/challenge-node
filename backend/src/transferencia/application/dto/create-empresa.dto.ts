@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, Matches, IsDate } from 'class-validator';
-export class CreateEmpresaDto { 
+import { IsString, Matches, IsDate } from 'class-validator';
+export class CreateEmpresaDto {
     @ApiProperty({ description: 'CUIT de la empresa' })
     @IsString()
     @Matches(/^\d{2}-\d{8}-\d{1}$/, {
@@ -13,6 +13,6 @@ export class CreateEmpresaDto {
     razonSocial: string;
 
     @ApiProperty({ description: 'Fecha de adhesión' })
-    @IsString()
-    fechaAdhesion: string;
+    @IsDate()
+    fechaAdhesion: Date;
 }

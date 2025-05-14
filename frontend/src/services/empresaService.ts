@@ -82,18 +82,18 @@ export const deleteEmpresa = async (id: number): Promise<number | undefined> => 
   }
 };
 
-export const getEmpresasConTransferenciasUltimoMes = async (): Promise<Empresa[] | undefined> => {
+export const getEmpresasConTransferenciasUltimoMes = async (queryString:string): Promise<Empresa[] | undefined> => {
   try {
-    const response = await instance.get<{data:Empresa[]}>('/transferencias-ultimo-mes', { headers: getToken() });
+    const response = await instance.get<{data:Empresa[]}>('/transferencias-ultimo-mes'+`?${queryString}`, { headers: getToken() });
     return response.data.data;
   } catch (error: any) {
     handleRequestError(error);
   }
 };
 
-export const getEmpresasAdheridasUltimoMes = async (): Promise<Empresa[]|undefined> => {
+export const getEmpresasAdheridasUltimoMes = async (queryString:string): Promise<Empresa[]|undefined> => {
   try {
-    const response = await instance.get<{data:Empresa[]}>('/adheridas-ultimo-mes', { headers: getToken() });
+    const response = await instance.get<{data:Empresa[]}>('/adheridas-ultimo-mes'+`?${queryString}`, { headers: getToken() });
     return response.data.data;
   } catch (error: any) {
     handleRequestError(error);

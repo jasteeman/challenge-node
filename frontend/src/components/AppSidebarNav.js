@@ -82,7 +82,6 @@ export const AppSidebarNav = ({ items }) => {
     return <div>Loading...</div> // Indicador de carga mientras se obtienen los roles
   }
 
-  console.log(items)
   return (
     <>
       {items &&

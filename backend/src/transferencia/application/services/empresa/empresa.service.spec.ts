@@ -62,7 +62,7 @@ describe('EmpresaService', () => {
     const createEmpresaDto: CreateEmpresaDto = {
       cuit: '30-12345678-9',
       razonSocial: 'Empresa de Prueba',
-      fechaAdhesion: new Date().toISOString(),
+      fechaAdhesion: new Date(),
     };
     const nuevaEmpresa = { ...createEmpresaDto, id: 1 } as unknown as Empresa;
 
@@ -111,7 +111,7 @@ describe('EmpresaService', () => {
   describe('actualizarEmpresa', () => {
     const empresaId = 1;
     const existingEmpresa = { id: empresaId, cuit: '30-11111111-1', razonSocial: 'Empresa Antigua' } as Empresa;
-    const updateEmpresaDto: UpdateEmpresaDto = { razonSocial: 'Empresa Nueva' };
+    const updateEmpresaDto: UpdateEmpresaDto = { razonSocial: 'Empresa Nueva', fechaAdhesion: new Date() };
     const updatedEmpresa = { ...existingEmpresa, ...updateEmpresaDto } as Empresa;
 
     it('should successfully update an existing empresa', async () => {
@@ -163,7 +163,7 @@ describe('EmpresaService', () => {
     it('should throw BadRequestException if razonSocial is empty', async () => {
       repository.findById.mockResolvedValue(existingEmpresa);
       await expect(
-        service.actualizarEmpresa(empresaId, { razonSocial: ' ' }),
+        service.actualizarEmpresa(empresaId, { razonSocial: ' ', fechaAdhesion:new Date() }),
       ).rejects.toThrow(BadRequestException);
     });
 

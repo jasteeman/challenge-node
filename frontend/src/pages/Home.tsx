@@ -1,21 +1,53 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Card, Row, Col, Spin, Alert, Table } from 'antd';
+import { Button, Card, Row, Col, Spin, Alert, Table, DatePicker } from 'antd';
 import { getEmpresasConTransferenciasUltimoMes, getEmpresasAdheridasUltimoMes } from '../services/empresaService';
 import { Empresa } from '../interfaces/IEmpresa';
+import { format } from 'date-fns';
+import esES from 'antd/es/date-picker/locale/es_ES';
+import { Dayjs } from 'dayjs';
+
+const { RangePicker } = DatePicker;
 
 export const HomePage = () => {
   const [transferencias, setTransferencias] = useState<Empresa[]>([]);
   const [adheridas, setAdheridas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null] | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const transferenciasData = await getEmpresasConTransferenciasUltimoMes();
-      const adheridasData = await getEmpresasAdheridasUltimoMes();
+      let transferenciasData: Empresa[] | null = [];
+      let adheridasData: Empresa[] | null = [];
 
+      if (dateRange) {
+        const [startDate, endDate] = dateRange;
+        if (startDate && endDate) {
+          const formattedStartDate = format(startDate, 'yyyy-MM-dd');
+          const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+
+          const params: Record<string, string | number | boolean | undefined> = {
+            fechaInicio: formattedStartDate,
+            fechaFin: formattedEndDate,
+          };
+          const filteredParams = Object.fromEntries(
+            Object.entries(params).filter(([_, v]) => v !== undefined && v !== '')
+          );
+          const parsedQueryString = new URLSearchParams();
+          for (const key in filteredParams) {
+            if (filteredParams.hasOwnProperty(key) && filteredParams[key] !== undefined) {
+              parsedQueryString.append(key, String(filteredParams[key]));
+            }
+          }
+          const queryString = parsedQueryString.toString();
+
+          transferenciasData = (await getEmpresasConTransferenciasUltimoMes(queryString)) || [];
+          adheridasData = (await getEmpresasAdheridasUltimoMes(queryString)) || [];
+        }
+      }
+      
       if (transferenciasData) {
         setTransferencias(transferenciasData);
       }
@@ -27,7 +59,7 @@ export const HomePage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dateRange]);
 
   useEffect(() => {
     fetchData();
@@ -37,17 +69,26 @@ export const HomePage = () => {
     fetchData();
   };
 
+  const handleDateRangeChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
+    if (dates) {
+      const [start, end] = dates;
+      setDateRange([start?.toDate() || null, end?.toDate() || null]);
+    } else {
+      setDateRange(null);
+    }
+  };
+
   const columnsTransferencias = [
     { title: 'Razón Social', dataIndex: 'razonSocial', key: 'razonSocial' },
     { title: 'CUIT', dataIndex: 'cuit', key: 'cuit' },
     { title: 'Monto Transferido', dataIndex: 'importe', key: 'importe', render: (value: number) => `$${value}` },
-    { title: 'Fecha Última Transferencia', dataIndex: 'ultimaTransferencia', key: 'ultimaTransferencia', render: (value: string) => new Date(value).toLocaleDateString() },
+    { title: 'Fecha Última Transferencia', dataIndex: 'ultimaTransferencia', key: 'ultimaTransferencia', render: (value: string) => new Date(value).toLocaleDateString('es-AR') },
   ];
 
   const columnsAdheridas = [
     { title: 'Razón Social', dataIndex: 'razonSocial', key: 'razonSocial' },
     { title: 'CUIT', dataIndex: 'cuit', key: 'cuit' },
-    { title: 'Fecha de Adhesión', dataIndex: 'fechaAdhesion', key: 'fechaAdhesion', render: (value: string) => new Date(value).toLocaleDateString() },
+    { title: 'Fecha de Adhesión', dataIndex: 'fechaAdhesion', key: 'fechaAdhesion', render: (value: string) => new Date(value).toLocaleDateString('es-AR') },
   ];
 
   return (
@@ -55,8 +96,13 @@ export const HomePage = () => {
       <h1 className="text-2xl font-semibold mb-4">Panel de Inicio</h1>
 
       <div className="mb-4">
-        <Button onClick={handleRefresh} loading={loading}>
-          Actualizar Datos
+        <RangePicker
+          onChange={handleDateRangeChange}
+          locale={esES}
+          format="DD/MM/YYYY"
+        />
+        <Button onClick={handleRefresh} loading={loading} style={{ marginLeft: '8px' }}>
+          Buscar por Fechas
         </Button>
       </div>
 
@@ -77,7 +123,7 @@ export const HomePage = () => {
       ) : (
         <Row gutter={24}>
           <Col span={12}>
-            <Card title="Empresas con Transferencias Último Mes">
+            <Card title="Empresas con Transferencias dentro del periodo">
               <Table
                 columns={columnsTransferencias}
                 dataSource={transferencias}
@@ -87,7 +133,7 @@ export const HomePage = () => {
             </Card>
           </Col>
           <Col span={12}>
-            <Card title="Empresas Adheridas Último Mes">
+            <Card title="Empresas Adheridas dentro del periodo">
               <Table
                 columns={columnsAdheridas}
                 dataSource={adheridas}
