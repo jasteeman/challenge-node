@@ -23,6 +23,7 @@ export class TransferenciaService {
     transferencia.importe = createTransferenciaDto.importe;
     transferencia.cuentaDebito = createTransferenciaDto.cuentaDebito;
     transferencia.cuentaCredito = createTransferenciaDto.cuentaCredito;
+    transferencia.fechaTransferencia = new Date();
     transferencia.empresa = empresa;
     return this.transferenciaRepository.create(transferencia);
   }

@@ -105,7 +105,12 @@ describe('TransferenciaController', () => {
   describe('actualizar', () => {
     it('should call actualizarTransferenciaUseCase.actualizarTransferenciaEmpresa with the parsed id and dto', async () => {
       const id = 1;
-      const actualizarTransferenciaDto: UpdateTransferenciaDto = { importe: 150 };
+      const actualizarTransferenciaDto: UpdateTransferenciaDto = { 
+          idEmpresa: 1, 
+          cuentaDebito: '123', 
+          cuentaCredito: '456', 
+          importe: 150 
+      };
       const updatedTransferencia: Transferencia = { id: 1, importe: 150 } as Transferencia;
       mockActualizarTransferenciaEmpresaUseCase.actualizarTransferenciaEmpresa.mockResolvedValue(updatedTransferencia);
 
@@ -116,7 +121,12 @@ describe('TransferenciaController', () => {
 
     it('should throw HttpException with NOT_FOUND status if transferencia is not found', async () => {
             const id = 1;
-            const actualizarTransferenciaDto: UpdateTransferenciaDto = { importe: 150 };
+            const actualizarTransferenciaDto: UpdateTransferenciaDto = { 
+                idEmpresa: 1, 
+                cuentaDebito: '123', 
+                cuentaCredito: '456', 
+                importe: 150 
+            };
             mockActualizarTransferenciaEmpresaUseCase.actualizarTransferenciaEmpresa.mockResolvedValue(undefined);
 
             try {
@@ -130,7 +140,12 @@ describe('TransferenciaController', () => {
 
       it('should throw HttpException with BAD_REQUEST status on other errors', async () => {
             const id = 1;
-            const actualizarTransferenciaDto: UpdateTransferenciaDto = { importe: 150 };
+            const actualizarTransferenciaDto: UpdateTransferenciaDto = { 
+                idEmpresa: 1, 
+                cuentaDebito: '123', 
+                cuentaCredito: '456', 
+                importe: 150 
+            };
             const errorMessage = 'Simulated error during update';
             mockActualizarTransferenciaEmpresaUseCase.actualizarTransferenciaEmpresa.mockRejectedValue(new Error(errorMessage));
 

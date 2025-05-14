@@ -1,21 +1,22 @@
-import { IsNotEmpty, IsNumber, IsPositive, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
 export class CreateTransferenciaDto {
-  @IsNotEmpty()
-  @IsNumber()
-  @IsPositive()
-  idEmpresa: number;
+    @ApiProperty({ description: 'ID de la empresa' })
+    @IsNumber()
+    idEmpresa: number;
 
-  @IsNotEmpty()
-  @IsNumber()
-  @IsPositive()
-  importe: number;
+    @ApiProperty({ description: 'Importe de la transferencia' })
+    @IsNumber()
+    importe: number;
 
-  @IsNotEmpty()
-  @IsString()
-  cuentaDebito: string;
+    @ApiProperty({ description: 'Cuenta de débito' })
+    @IsString()
+    @IsNotEmpty()
+    cuentaDebito: string;
 
-  @IsNotEmpty()
-  @IsString()
-  cuentaCredito: string;
+    @ApiProperty({ description: 'Cuenta de crédito' })
+    @IsString()
+    @IsNotEmpty()
+    cuentaCredito: string;
 }

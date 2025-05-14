@@ -48,7 +48,7 @@ export class EmpresaController {
       }
       return empresa;
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST); // Use HttpException for better error handling
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -142,7 +142,7 @@ export class EmpresaController {
   async obtenerEmpresa(@Param('id') id: string): Promise<Empresa | undefined> {
     const empresa = await this.obtenerEmpresaUseCase.obtenerEmpresa(+id);
     if (!empresa) {
-      throw new HttpException(`Empresa with id ${id} not found`, HttpStatus.NOT_FOUND); // Use HttpException
+      throw new HttpException(`Empresa with id ${id} not found`, HttpStatus.NOT_FOUND);
     }
     return empresa;
   }

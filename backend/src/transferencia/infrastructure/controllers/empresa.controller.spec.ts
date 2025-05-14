@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EmpresaController } from './empresa.controller'; 
+import { EmpresaController } from './empresa.controller';
 import { CreateEmpresaDto } from '../../application/dto/create-empresa.dto';
 import { Empresa } from '../../domain/entities/empresa.entity';
 import { PaginationOptions, PaginatedResult } from 'src/common/utils/paginations.utils';
@@ -95,8 +95,8 @@ describe('EmpresaController', () => {
 
   describe('registrar', () => {
     it('should call registrarEmpresaUseCase.registrarEmpresa and return the created empresa', async () => {
-      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion : '2024-01-01'};
-      const expectedEmpresa: Empresa = { id: 1, ...createEmpresaDto, fechaAdhesion: new Date() }; 
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: '2024-01-01' };
+      const expectedEmpresa: Empresa = { id: 1, ...createEmpresaDto, fechaAdhesion: new Date() };
       jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockResolvedValue(expectedEmpresa);
 
       const result = await controller.registrar(createEmpresaDto);
@@ -106,11 +106,19 @@ describe('EmpresaController', () => {
     });
 
     it('should throw HttpException with BAD_REQUEST status if registrarEmpresaUseCase throws an error', async () => {
-      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion:'2024-01-01' };
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: '2024-01-01' };
       jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockRejectedValue(new Error('Registration failed'));
 
       await expect(controller.registrar(createEmpresaDto)).rejects.toThrowError(HttpException);
       await expect(controller.registrar(createEmpresaDto)).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
+    });
+
+    it('should throw HttpException with INTERNAL_SERVER_ERROR status if registrarEmpresaUseCase throws an unknown error', async () => {
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: '2024-01-01' };
+      const error = new Error('Unknown server error');
+      jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockRejectedValue(error);
+
+      await expect(controller.registrar(createEmpresaDto)).rejects.toThrowError(HttpException);
     });
   });
 
@@ -147,6 +155,13 @@ describe('EmpresaController', () => {
       await expect(controller.getEmpresasConTransferenciasUltimoMes('2024-01-01', 'invalid')).rejects.toThrowError(HttpException);
       await expect(controller.getEmpresasConTransferenciasUltimoMes('2024-01-01', 'invalid')).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
     });
+
+    it('should throw HttpException with the same error and status as the use case', async () => {
+      const error = new Error('Failed to get empresas con transferencias');
+      jest.spyOn(obtenerEmpresaConTransferenciaUseCase, 'obtenerEmpresaConTransferenciaUltimoMes').mockRejectedValue(error);
+
+      await expect(controller.getEmpresasConTransferenciasUltimoMes('2024-01-01', '2024-01-31')).rejects.toThrowError(error);
+    });
   });
 
   describe('getEmpresasAdheridasUltimoMes', () => {
@@ -169,6 +184,13 @@ describe('EmpresaController', () => {
       await expect(controller.getEmpresasAdheridasUltimoMes('2024-01-01', 'invalid')).rejects.toThrowError(HttpException);
       await expect(controller.getEmpresasAdheridasUltimoMes('2024-01-01', 'invalid')).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
     });
+
+    it('should throw HttpException with the same error and status as the use case', async () => {
+      const error = new Error('Failed to get empresas adheridas');
+      jest.spyOn(obtenerEmpresaAdheridaUseCase, 'obtenerEmpresasAdheridasUltimoMes').mockRejectedValue(error);
+
+      await expect(controller.getEmpresasAdheridasUltimoMes('2024-01-01', '2024-01-31')).rejects.toThrowError(error);
+    });
   });
 
   describe('obtenerEmpresa', () => {
@@ -188,6 +210,12 @@ describe('EmpresaController', () => {
       await expect(controller.obtenerEmpresa('1')).rejects.toThrowError(HttpException);
       await expect(controller.obtenerEmpresa('1')).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
     });
+    it('should throw HttpException with the same error and status as the use case', async () => {
+      const error = new Error('Failed to get empresa');
+      jest.spyOn(obtenerEmpresaUseCase, 'obtenerEmpresa').mockRejectedValue(error);
+
+      await expect(controller.obtenerEmpresa('1')).rejects.toThrowError(error);
+    });
   });
 
   describe('actualizar', () => {
@@ -201,6 +229,13 @@ describe('EmpresaController', () => {
       expect(actualizarEmpresaUseCase.actualizarEmpresa).toHaveBeenCalledWith(parseInt(empresaId, 10), updateEmpresaDto);
       expect(result).toEqual(updatedEmpresa);
     });
+
+    it('should throw HttpException with the same error and status as the use case', async () => {
+      const error = new Error('Failed to update empresa');
+      jest.spyOn(actualizarEmpresaUseCase, 'actualizarEmpresa').mockRejectedValue(error);
+
+      await expect(controller.actualizar(empresaId, updateEmpresaDto)).rejects.toThrowError(error);
+    });
   });
 
   describe('eliminar', () => {
@@ -211,5 +246,12 @@ describe('EmpresaController', () => {
       await controller.eliminar(empresaId);
       expect(eliminarEmpresaUseCase.eliminarEmpresa).toHaveBeenCalledWith(parseInt(empresaId, 10));
     });
+    it('should throw HttpException with the same error and status as the use case', async () => {
+      const error = new Error('Failed to delete empresa');
+      jest.spyOn(eliminarEmpresaUseCase, 'eliminarEmpresa').mockRejectedValue(error);
+
+      await expect(controller.eliminar(empresaId)).rejects.toThrowError(error);
+    });
   });
 });
+

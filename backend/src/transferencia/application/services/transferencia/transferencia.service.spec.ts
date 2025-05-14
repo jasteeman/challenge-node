@@ -77,7 +77,12 @@ describe('TransferenciaService', () => {
   describe('actualizarTransferenciaEmpresa', () => {
     const transferenciaId = 1;
     const existingTransferencia = { id: transferenciaId, importe: 50 } as Transferencia;
-    const updateTransferenciaDto: UpdateTransferenciaDto = { importe: 75 };
+    const updateTransferenciaDto: UpdateTransferenciaDto = { 
+      importe: 75, 
+      idEmpresa: 1, 
+      cuentaDebito: '123', 
+      cuentaCredito: '456' 
+    };
     const updatedTransferencia = { ...existingTransferencia, ...updateTransferenciaDto } as Transferencia;
 
     it('should update an existing transferencia', async () => {

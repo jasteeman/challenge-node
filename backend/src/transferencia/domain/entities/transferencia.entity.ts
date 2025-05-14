@@ -22,6 +22,6 @@ export class Transferencia {
   @Column()
   cuentaCredito: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'datetime'})
   fechaTransferencia: Date;
 }

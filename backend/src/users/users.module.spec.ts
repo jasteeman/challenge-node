@@ -31,7 +31,7 @@ describe('UsersModule', () => {
         TypeOrmModule.forFeature([User]),
         UsersModule,
       ],
-      providers: [UsersService, UsersRepository], // No necesitamos mocks aquí
+      providers: [UsersService, UsersRepository],
     }).compile();
 
     service = module.get<UsersService>(UsersService);

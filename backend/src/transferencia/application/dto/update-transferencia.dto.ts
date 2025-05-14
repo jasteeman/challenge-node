@@ -1,16 +1,22 @@
-import { IsOptional, IsNumber, IsPositive, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
 export class UpdateTransferenciaDto {
-  @IsOptional()
-  @IsNumber()
-  @IsPositive()
-  importe?: number;
+    @ApiProperty({ description: 'ID de la empresa' })
+    @IsNumber()
+    idEmpresa: number;
 
-  @IsOptional()
-  @IsString()
-  cuentaDebito?: string;
+    @ApiProperty({ description: 'Importe de la transferencia' })
+    @IsNumber()
+    importe: number;
 
-  @IsOptional()
-  @IsString()
-  cuentaCredito?: string;
+    @ApiProperty({ description: 'Cuenta de débito' })
+    @IsString()
+    @IsNotEmpty()
+    cuentaDebito: string;
+
+    @ApiProperty({ description: 'Cuenta de crédito' })
+    @IsString()
+    @IsNotEmpty()
+    cuentaCredito: string;
 }

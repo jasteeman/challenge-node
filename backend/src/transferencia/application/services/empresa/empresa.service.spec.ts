@@ -166,6 +166,21 @@ describe('EmpresaService', () => {
         service.actualizarEmpresa(empresaId, { razonSocial: ' ' }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should update the CUIT when a valid CUIT is provided in the DTO', async () => {
+      const newCuit = '30-98765432-1';
+      const updateDtoWithCuit: UpdateEmpresaDto = { ...updateEmpresaDto, cuit: newCuit };
+      const updatedEmpresaWithCuit = { ...existingEmpresa, ...updateDtoWithCuit };
+
+      repository.findById.mockResolvedValue(existingEmpresa);
+      repository.findByCUIT.mockResolvedValue(undefined);
+      repository.update.mockResolvedValue(updatedEmpresaWithCuit);
+
+      const result = await service.actualizarEmpresa(empresaId, updateDtoWithCuit);
+
+      expect(repository.update).toHaveBeenCalledWith(empresaId, { ...existingEmpresa, ...updateDtoWithCuit });
+      expect(result).toEqual(updatedEmpresaWithCuit);
+    });
   });
 
   describe('eliminarEmpresa', () => {

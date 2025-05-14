@@ -1,16 +1,18 @@
-import { IsDate, IsNotEmpty, IsString, Matches } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsOptional, Matches, IsDate } from 'class-validator';
+export class CreateEmpresaDto { 
+    @ApiProperty({ description: 'CUIT de la empresa' })
+    @IsString()
+    @Matches(/^\d{2}-\d{8}-\d{1}$/, {
+        message: 'El CUIT debe tener el formato XX-XXXXXXXX-X',
+    })
+    cuit: string;
 
-export class CreateEmpresaDto {
-  @IsNotEmpty()
-  @IsString()
-  @Matches(/^\d{2}-\d{8}-\d{1}$/, { message: 'El CUIT debe tener el formato XX-XXXXXXXX-X' })
-  cuit: string;
+    @ApiProperty({ description: 'Razón social de la empresa' })
+    @IsString()
+    razonSocial: string;
 
-  @IsNotEmpty()
-  @IsString()
-  razonSocial: string;
-
-  @IsNotEmpty()
-  @IsString()
-  fechaAdhesion: string;
+    @ApiProperty({ description: 'Fecha de adhesión' })
+    @IsString()
+    fechaAdhesion: string;
 }

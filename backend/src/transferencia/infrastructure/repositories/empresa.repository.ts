@@ -44,10 +44,7 @@ export class EmpresaRepository implements EmpresaRepositoryPort {
     try {
       await this.empresaRepository.update(id, empresa);
       const updatedEmpresa = await this.empresaRepository.findOne({ where: { id } });
-      if (!updatedEmpresa) {
-        throw new NotFoundException(`Updated Empresa with id ${id} not found`);
-      }
-      return updatedEmpresa;
+      return updatedEmpresa!;
     } catch (error) {
       throw new BadRequestException(`Error updating empresa: ${error.message}`);
     }
