@@ -14,7 +14,6 @@ import debounce from 'lodash/debounce';
 import EmpresaForm from '../components/empresa/EmpresaForm';
 import { GetProp } from 'antd/lib';
 import { Link } from 'react-router-dom';
-import moment from 'moment';
 import { format } from 'date-fns';
 
 type TablePaginationConfig = Exclude<GetProp<TableProps, "pagination">, boolean>;
