@@ -82,11 +82,11 @@ export class EmpresaService {
   }
 
 
-  async obtenerEmpresaConTransferenciaUltimoMes(): Promise<Empresa[]> {
-    return this.empresaRepository.findEmpresasConTransferenciasUltimoMes();
+  async obtenerEmpresaConTransferenciaUltimoMes(fechaInicio: Date, fechaFin: Date): Promise<Empresa[]> {
+    return this.empresaRepository.findEmpresasConTransferenciasUltimoMes(fechaInicio, fechaFin);
   }
 
-  async obtenerEmpresasAdheridasUltimoMes(): Promise<Empresa[]> {
-    return this.empresaRepository.findEmpresasAdheridasUltimoMes();
+  async obtenerEmpresasAdheridasUltimoMes(fechaInicio: Date, fechaFin: Date): Promise<Empresa[]> {
+    return this.empresaRepository.findEmpresasAdheridasUltimoMes(fechaInicio, fechaFin);
   }
 }

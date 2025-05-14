@@ -4,6 +4,7 @@ import { CreateEmpresaDto } from '../../application/dto/create-empresa.dto';
 import { Empresa } from '../../domain/entities/empresa.entity';
 import { PaginationOptions, PaginatedResult } from 'src/common/utils/paginations.utils';
 import { UpdateEmpresaDto } from '../../application/dto/update-empresa.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 const mockRegistrarEmpresaUseCase = () => ({
   registrarEmpresa: jest.fn(),
@@ -93,23 +94,23 @@ describe('EmpresaController', () => {
   });
 
   describe('registrar', () => {
-    const createEmpresaDto: CreateEmpresaDto = {
-      cuit: '30-12345678-9',
-      razonSocial: 'Empresa de Prueba',
-      fechaAdhesion: new Date().toISOString(),
-    };
-    const nuevaEmpresa = { ...createEmpresaDto, id: 1 } as unknown as Empresa;
+    it('should call registrarEmpresaUseCase.registrarEmpresa and return the created empresa', async () => {
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion : '2024-01-01'};
+      const expectedEmpresa: Empresa = { id: 1, ...createEmpresaDto, fechaAdhesion: new Date() }; 
+      jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockResolvedValue(expectedEmpresa);
 
-    it('should call registrarEmpresaUseCase.registrarEmpresa and return the result', async () => {
-      registrarEmpresaUseCase.registrarEmpresa.mockResolvedValue(nuevaEmpresa);
       const result = await controller.registrar(createEmpresaDto);
+
       expect(registrarEmpresaUseCase.registrarEmpresa).toHaveBeenCalledWith(createEmpresaDto);
-      expect(result).toEqual(nuevaEmpresa);
+      expect(result).toEqual(expectedEmpresa);
     });
 
-    it('should throw an error if registrarEmpresaUseCase.registrarEmpresa fails', async () => {
-      registrarEmpresaUseCase.registrarEmpresa.mockResolvedValue(null);
-      await expect(controller.registrar(createEmpresaDto)).rejects.toThrow('Failed to register Empresa');
+    it('should throw HttpException with BAD_REQUEST status if registrarEmpresaUseCase throws an error', async () => {
+      const createEmpresaDto: CreateEmpresaDto = { cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion:'2024-01-01' };
+      jest.spyOn(registrarEmpresaUseCase, 'registrarEmpresa').mockRejectedValue(new Error('Registration failed'));
+
+      await expect(controller.registrar(createEmpresaDto)).rejects.toThrowError(HttpException);
+      await expect(controller.registrar(createEmpresaDto)).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
     });
   });
 
@@ -126,39 +127,66 @@ describe('EmpresaController', () => {
   });
 
   describe('getEmpresasConTransferenciasUltimoMes', () => {
-    const mockEmpresas: Empresa[] = [];
     it('should call obtenerEmpresaConTransferenciaUseCase.obtenerEmpresaConTransferenciaUltimoMes and return the result', async () => {
-      obtenerEmpresaConTransferenciaUseCase.obtenerEmpresaConTransferenciaUltimoMes.mockResolvedValue(mockEmpresas);
-      const result = await controller.getEmpresasConTransferenciasUltimoMes();
-      expect(obtenerEmpresaConTransferenciaUseCase.obtenerEmpresaConTransferenciaUltimoMes).toHaveBeenCalled();
+      const mockEmpresas: Empresa[] = [];
+      jest.spyOn(obtenerEmpresaConTransferenciaUseCase, 'obtenerEmpresaConTransferenciaUltimoMes').mockResolvedValue(mockEmpresas);
+      const result = await controller.getEmpresasConTransferenciasUltimoMes('2024-01-01', '2024-01-31');
+      expect(obtenerEmpresaConTransferenciaUseCase.obtenerEmpresaConTransferenciaUltimoMes).toHaveBeenCalledWith(
+        new Date('2024-01-01'),
+        new Date('2024-01-31'),
+      );
       expect(result).toEqual(mockEmpresas);
+    });
+
+    it('should throw HttpException with BAD_REQUEST if fechaInicio is invalid', async () => {
+      await expect(controller.getEmpresasConTransferenciasUltimoMes('invalid', '2024-01-31')).rejects.toThrowError(HttpException);
+      await expect(controller.getEmpresasConTransferenciasUltimoMes('invalid', '2024-01-31')).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
+    });
+
+    it('should throw HttpException with BAD_REQUEST if fechaFin is invalid', async () => {
+      await expect(controller.getEmpresasConTransferenciasUltimoMes('2024-01-01', 'invalid')).rejects.toThrowError(HttpException);
+      await expect(controller.getEmpresasConTransferenciasUltimoMes('2024-01-01', 'invalid')).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
     });
   });
 
   describe('getEmpresasAdheridasUltimoMes', () => {
-    const mockEmpresas: Empresa[] = [];
     it('should call obtenerEmpresaAdheridaUseCase.obtenerEmpresasAdheridasUltimoMes and return the result', async () => {
-      obtenerEmpresaAdheridaUseCase.obtenerEmpresasAdheridasUltimoMes.mockResolvedValue(mockEmpresas);
-      const result = await controller.getEmpresasAdheridasUltimoMes();
-      expect(obtenerEmpresaAdheridaUseCase.obtenerEmpresasAdheridasUltimoMes).toHaveBeenCalled();
+      const mockEmpresas: Empresa[] = [];
+      jest.spyOn(obtenerEmpresaAdheridaUseCase, 'obtenerEmpresasAdheridasUltimoMes').mockResolvedValue(mockEmpresas);
+      const result = await controller.getEmpresasAdheridasUltimoMes('2024-01-01', '2024-01-31');
+      expect(obtenerEmpresaAdheridaUseCase.obtenerEmpresasAdheridasUltimoMes).toHaveBeenCalledWith(
+        new Date('2024-01-01'),
+        new Date('2024-01-31'),
+      );
       expect(result).toEqual(mockEmpresas);
+    });
+    it('should throw HttpException with BAD_REQUEST if fechaInicio is invalid', async () => {
+      await expect(controller.getEmpresasAdheridasUltimoMes('invalid', '2024-01-31')).rejects.toThrowError(HttpException);
+      await expect(controller.getEmpresasAdheridasUltimoMes('invalid', '2024-01-31')).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
+    });
+
+    it('should throw HttpException with BAD_REQUEST if fechaFin is invalid', async () => {
+      await expect(controller.getEmpresasAdheridasUltimoMes('2024-01-01', 'invalid')).rejects.toThrowError(HttpException);
+      await expect(controller.getEmpresasAdheridasUltimoMes('2024-01-01', 'invalid')).rejects.toHaveProperty('status', HttpStatus.BAD_REQUEST);
     });
   });
 
   describe('obtenerEmpresa', () => {
-    const empresaId = '1';
-    const mockEmpresa = { id: 1 } as Empresa;
+    it('should call obtenerEmpresaUseCase.obtenerEmpresa and return the empresa', async () => {
+      const expectedEmpresa: Empresa = { id: 1, cuit: '12-34567890-1', razonSocial: 'Test Empresa', fechaAdhesion: new Date() };
+      jest.spyOn(obtenerEmpresaUseCase, 'obtenerEmpresa').mockResolvedValue(expectedEmpresa);
 
-    it('should call obtenerEmpresaUseCase.obtenerEmpresa with the parsed id and return the result', async () => {
-      obtenerEmpresaUseCase.obtenerEmpresa.mockResolvedValue(mockEmpresa);
-      const result = await controller.obtenerEmpresa(empresaId);
-      expect(obtenerEmpresaUseCase.obtenerEmpresa).toHaveBeenCalledWith(parseInt(empresaId, 10));
-      expect(result).toEqual(mockEmpresa);
+      const result = await controller.obtenerEmpresa('1');
+
+      expect(obtenerEmpresaUseCase.obtenerEmpresa).toHaveBeenCalledWith(1);
+      expect(result).toEqual(expectedEmpresa);
     });
 
-    it('should throw an error if obtenerEmpresaUseCase.obtenerEmpresa fails', async () => {
-      obtenerEmpresaUseCase.obtenerEmpresa.mockResolvedValue(undefined);
-      await expect(controller.obtenerEmpresa(empresaId)).rejects.toThrow('Failed to register Empresa');
+    it('should throw HttpException with NOT_FOUND status if obtenerEmpresaUseCase returns undefined', async () => {
+      jest.spyOn(obtenerEmpresaUseCase, 'obtenerEmpresa').mockResolvedValue(undefined);
+
+      await expect(controller.obtenerEmpresa('1')).rejects.toThrowError(HttpException);
+      await expect(controller.obtenerEmpresa('1')).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
     });
   });
 

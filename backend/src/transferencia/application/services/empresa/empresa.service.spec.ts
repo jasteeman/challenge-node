@@ -196,7 +196,8 @@ describe('EmpresaService', () => {
     it('should call empresaRepository.findEmpresasConTransferenciasUltimoMes', async () => {
       const mockResult: Empresa[] = [];
       repository.findEmpresasConTransferenciasUltimoMes.mockResolvedValue(mockResult);
-      const result = await service.obtenerEmpresaConTransferenciaUltimoMes();
+      const result = await service.obtenerEmpresaConTransferenciaUltimoMes(new Date('2024-01-01'),
+        new Date('2024-01-31'));
       expect(repository.findEmpresasConTransferenciasUltimoMes).toHaveBeenCalled();
       expect(result).toEqual(mockResult);
     });
@@ -206,7 +207,8 @@ describe('EmpresaService', () => {
     it('should call empresaRepository.findEmpresasAdheridasUltimoMes', async () => {
       const mockResult: Empresa[] = [];
       repository.findEmpresasAdheridasUltimoMes.mockResolvedValue(mockResult);
-      const result = await service.obtenerEmpresasAdheridasUltimoMes();
+      const result = await service.obtenerEmpresasAdheridasUltimoMes(new Date('2024-01-01'),
+        new Date('2024-01-31'));
       expect(repository.findEmpresasAdheridasUltimoMes).toHaveBeenCalled();
       expect(result).toEqual(mockResult);
     });

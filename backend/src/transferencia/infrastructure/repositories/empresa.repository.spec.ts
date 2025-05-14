@@ -1,45 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EmpresaRepository } from './empresa.repository';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { EmpresaRepository } from './empresa.repository';
 import { Empresa } from '../../domain/entities/empresa.entity';
-import { Transferencia } from 'src/transferencia/domain/entities/transferencia.entity';
-import { Like, Between, In, Repository } from 'typeorm';
-import { PaginationOptions } from 'src/common/utils/paginations.utils';
-import { groupBy } from 'rxjs';
-
-const mockEmpresaRepository = () => ({
-  findOne: jest.fn(),
-  save: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-  findAndCount: jest.fn(),
-  find: jest.fn(),
-  search: jest.fn(),
-  count: jest.fn(),
-  findBy: jest.fn(),
-  createQueryBuilder: jest.fn().mockReturnValue({
-    select: jest.fn().mockReturnThis(),
-    distinct: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    groupBy: jest.fn().mockReturnThis(),
-    getRawMany: jest.fn(),
-  }),
-});
-
-const mockTransferenciaRepository = () => ({
-  createQueryBuilder: jest.fn().mockReturnValue({
-    select: jest.fn().mockReturnThis(),
-    distinct: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    groupBy: jest.fn().mockReturnThis(),
-    getRawMany: jest.fn(),
-  }),
-});
+import { Transferencia } from '../../../transferencia/domain/entities/transferencia.entity';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { Between, Like, In } from 'typeorm';
+import { PaginatedResult, PaginationOptions } from 'src/common/utils/paginations.utils';
+import { SelectQueryBuilder } from 'typeorm'; // Import SelectQueryBuilder
 
 describe('EmpresaRepository', () => {
   let repository: EmpresaRepository;
-  let empresaRepo: ReturnType<typeof mockEmpresaRepository>;
-  let transferenciaRepo: ReturnType<typeof mockTransferenciaRepository>;
+  let empresaRepo: Repository<Empresa>;
+  let transferenciaRepo: Repository<Transferencia>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -47,18 +20,32 @@ describe('EmpresaRepository', () => {
         EmpresaRepository,
         {
           provide: getRepositoryToken(Empresa),
-          useFactory: mockEmpresaRepository,
+          useValue: {
+            findOne: jest.fn(),
+            find: jest.fn(),
+            findAndCount: jest.fn(),
+            save: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            createQueryBuilder: jest.fn(),
+            findBy: jest.fn(),
+            count: jest.fn(),
+          },
         },
         {
           provide: getRepositoryToken(Transferencia),
-          useFactory: mockTransferenciaRepository,
+          useValue: {
+            createQueryBuilder: jest.fn(),
+          },
         },
       ],
     }).compile();
 
     repository = module.get<EmpresaRepository>(EmpresaRepository);
-    empresaRepo = module.get(getRepositoryToken(Empresa));
-    transferenciaRepo = module.get(getRepositoryToken(Transferencia));
+    empresaRepo = module.get<Repository<Empresa>>(getRepositoryToken(Empresa));
+    transferenciaRepo = module.get<Repository<Transferencia>>(
+      getRepositoryToken(Transferencia),
+    );
   });
 
   it('should be defined', () => {
@@ -66,208 +53,349 @@ describe('EmpresaRepository', () => {
   });
 
   describe('findById', () => {
-    it('should call empresaRepository.findOne with the correct id', async () => {
-      const id = 1;
-      const mockEmpresa = { id } as Empresa;
-      empresaRepo.findOne.mockResolvedValue(mockEmpresa);
-      const result = await repository.findById(id);
-      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { id } });
-      expect(result).toEqual(mockEmpresa);
+    it('should return an empresa when given a valid ID', async () => {
+      const expectedEmpresa = new Empresa();
+      expectedEmpresa.id = 1;
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(expectedEmpresa);
+
+      const result = await repository.findById(1);
+
+      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(result).toEqual(expectedEmpresa);
+    });
+
+    it('should throw NotFoundException when given an invalid ID', async () => {
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(null);
+
+      await expect(repository.findById(1)).rejects.toThrowError(NotFoundException);
+      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
     });
   });
 
   describe('findByCUIT', () => {
-    it('should call empresaRepository.findOne with the correct cuit', async () => {
-      const cuit = '30-12345678-9';
-      const mockEmpresa = { cuit } as Empresa;
-      empresaRepo.findOne.mockResolvedValue(mockEmpresa);
-      const result = await repository.findByCUIT(cuit);
-      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { cuit } });
-      expect(result).toEqual(mockEmpresa);
+    it('should return an empresa when given a valid CUIT', async () => {
+      const expectedEmpresa = new Empresa();
+      expectedEmpresa.cuit = '12-34567890-1';
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(expectedEmpresa);
+
+      const result = await repository.findByCUIT('12-34567890-1');
+
+      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { cuit: '12-34567890-1' } });
+      expect(result).toEqual(expectedEmpresa);
+    });
+
+    it('should return undefined when given an invalid CUIT', async () => {
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(null);
+
+      const result = await repository.findByCUIT('invalid-cuit');
+
+      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { cuit: 'invalid-cuit' } });
+      expect(result).toBeUndefined();
     });
   });
 
   describe('create', () => {
-    it('should call empresaRepository.save with the provided empresa', async () => {
-      const mockEmpresa = {} as Empresa;
-      empresaRepo.save.mockResolvedValue(mockEmpresa);
-      const result = await repository.create(mockEmpresa);
-      expect(empresaRepo.save).toHaveBeenCalledWith(mockEmpresa);
-      expect(result).toEqual(mockEmpresa);
+    it('should create an empresa successfully', async () => {
+      const empresaToCreate = new Empresa();
+      empresaToCreate.cuit = '12-34567890-1';
+      empresaToCreate.razonSocial = 'Test Empresa';
+      const createdEmpresa = { ...empresaToCreate, id: 1 } as Empresa;
+      jest.spyOn(empresaRepo, 'save').mockResolvedValue(createdEmpresa);
+
+      const result = await repository.create(empresaToCreate);
+
+      expect(empresaRepo.save).toHaveBeenCalledWith(empresaToCreate);
+      expect(result).toEqual(createdEmpresa);
+    });
+
+    it('should throw BadRequestException when creation fails', async () => {
+      const empresaToCreate = new Empresa();
+      empresaToCreate.cuit = '12-34567890-1';
+      empresaToCreate.razonSocial = 'Test Empresa';
+      jest.spyOn(empresaRepo, 'save').mockRejectedValue(new Error('Simulated error'));
+
+      await expect(repository.create(empresaToCreate)).rejects.toThrowError(
+        BadRequestException,
+      );
+      expect(empresaRepo.save).toHaveBeenCalledWith(empresaToCreate);
     });
   });
 
   describe('update', () => {
-    it('should call empresaRepository.findOne and empresaRepository.update with the correct id and empresa data', async () => {
-      const id = 1;
-      const mockExistingEmpresa = { id } as Empresa;
-      const mockEmpresa = { razonSocial: 'Updated' } as Empresa;
-      const mockUpdatedEmpresa = { ...mockExistingEmpresa, ...mockEmpresa } as Empresa;
-      empresaRepo.findOne.mockResolvedValue(mockExistingEmpresa);
-      empresaRepo.update.mockResolvedValue({ affected: 1 });
-      empresaRepo.findOne.mockResolvedValue(mockUpdatedEmpresa);
+    it('should update an empresa successfully', async () => {
+      const existingEmpresa = { id: 1, cuit: '12-34567890-1', razonSocial: 'Old Name' } as Empresa;
+      const updatedEmpresaData = { razonSocial: 'New Name' } as Empresa;
+      const updatedEmpresa = { id: 1, cuit: '12-34567890-1', razonSocial: 'New Name' } as Empresa;
 
-      const result = await repository.update(id, mockEmpresa);
-      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { id } });
-      expect(empresaRepo.update).toHaveBeenCalledWith(id, mockEmpresa);
-      expect(result).toEqual(mockUpdatedEmpresa);
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(existingEmpresa);
+      jest.spyOn(empresaRepo, 'update').mockResolvedValue({ affected: 1 } as any);
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(updatedEmpresa);
+
+      const result = await repository.update(1, updatedEmpresaData);
+
+      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(empresaRepo.update).toHaveBeenCalledWith(1, updatedEmpresaData);
+      expect(result).toEqual(updatedEmpresa);
     });
 
-    it('should throw an error if empresa not found during update', async () => {
-      const id = 1;
-      const mockEmpresa = { razonSocial: 'Updated' } as Empresa;
-      empresaRepo.findOne.mockResolvedValue(undefined);
-      await expect(repository.update(id, mockEmpresa)).rejects.toThrow(`Empresa with id ${id} not found`);
+    it('should throw Error if findOne fails after update', async () => {
+      const existingEmpresa = { id: 1, cuit: '12-34567890-1', razonSocial: 'Old Name' } as Empresa;
+      const updatedEmpresaData = { razonSocial: 'New Name' } as Empresa;
+    
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(existingEmpresa);
+      jest.spyOn(empresaRepo, 'update').mockResolvedValue({ affected: 0 } as any);
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(null); // Simulate findOne failing
+    
+      await expect(repository.update(1, updatedEmpresaData)).rejects.toThrowError(
+        Error,
+      );
+      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
     });
+    
+    
+    
+    it('should throw BadRequestException when update fails', async () => {
+      const existingEmpresa = { id: 1, cuit: '12-34567890-1', razonSocial: 'Old Name' } as Empresa;
+      const updatedEmpresaData = { razonSocial: 'New Name' } as Empresa;
+      jest.spyOn(empresaRepo, 'findOne').mockResolvedValue(existingEmpresa);
+      jest.spyOn(empresaRepo, 'update').mockRejectedValue(new Error('Simulated error'));
 
-    it('should throw an error if failed to retrieve updated empresa', async () => {
-      const id = 1;
-      const mockExistingEmpresa = { id } as Empresa;
-      const mockEmpresa = { razonSocial: 'Updated' } as Empresa;
-      empresaRepo.findOne.mockResolvedValueOnce(mockExistingEmpresa);
-      empresaRepo.update.mockResolvedValue({ affected: 1 });
-      empresaRepo.findOne.mockResolvedValueOnce(undefined);
-
-      await expect(repository.update(id, mockEmpresa)).rejects.toThrow(`Failed to retrieve updated Empresa with id ${id}`);
-    });
+      await expect(repository.update(1, updatedEmpresaData)).rejects.toThrowError(
+        BadRequestException,
+      );
+      expect(empresaRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(empresaRepo.update).toHaveBeenCalledWith(1, updatedEmpresaData);
+    }); 
   });
 
   describe('delete', () => {
-    it('should call empresaRepository.delete with the correct id', async () => {
-      const id = 1;
-      empresaRepo.delete.mockResolvedValue({ affected: 1 });
-      await repository.delete(id);
-      expect(empresaRepo.delete).toHaveBeenCalledWith(id);
+    it('should delete an empresa successfully', async () => {
+      jest.spyOn(empresaRepo, 'delete').mockResolvedValue({ affected: 1 } as any);
+
+      await repository.delete(1);
+
+      expect(empresaRepo.delete).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw NotFoundException if empresa to delete does not exist', async () => {
+      jest.spyOn(empresaRepo, 'delete').mockResolvedValue({ affected: 0 } as any);
+
+      await expect(repository.delete(1)).rejects.toThrowError(BadRequestException);
+      expect(empresaRepo.delete).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw BadRequestException when deletion fails', async () => {
+      jest.spyOn(empresaRepo, 'delete').mockRejectedValue(new Error('Simulated error'));
+
+      await expect(repository.delete(1)).rejects.toThrowError(BadRequestException);
+      expect(empresaRepo.delete).toHaveBeenCalledWith(1);
     });
   });
 
   describe('findAll', () => {
-    it('should call empresaRepository.findAndCount with the correct pagination and search parameters', async () => {
-      const options: PaginationOptions = { page: 2, limit: 15, q: 'test' };
-      const mockEmpresas: Empresa[] = [];
-      const mockTotal = 0;
-      empresaRepo.findAndCount.mockResolvedValue([mockEmpresas, mockTotal]);
+    it('should return a paginated list of empresas', async () => {
+      const options: PaginationOptions = { page: 1, limit: 10, q: '' };
+      const mockEmpresas = [
+        { id: 1, razonSocial: 'Empresa 1', cuit: '123' },
+        { id: 2, razonSocial: 'Empresa 2', cuit: '456' },
+      ] as Empresa[];
+      const total = 2;
+      jest.spyOn(empresaRepo, 'findAndCount').mockResolvedValue([mockEmpresas, total]);
 
       const result = await repository.findAll(options);
-      expect(empresaRepo.findAndCount).toHaveBeenCalledWith({
-        skip: 15,
-        take: 15,
-        where: {
-          cuit: Like('%test%'),
-          razonSocial: Like('%test%'),
-        },
-      });
-      expect(result).toEqual({
-        data: mockEmpresas,
-        total: mockTotal,
-        page: 2,
-        limit: 15,
-        totalPages: 0,
-      });
-    });
 
-    it('should use default pagination if options are not provided', async () => {
-      const mockEmpresas: Empresa[] = [];
-      const mockTotal = 0;
-      empresaRepo.findAndCount.mockResolvedValue([mockEmpresas, mockTotal]);
-
-      await repository.findAll({});
       expect(empresaRepo.findAndCount).toHaveBeenCalledWith({
         skip: 0,
         take: 10,
         where: {},
       });
+      expect(result).toEqual({
+        data: mockEmpresas,
+        total,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      });
+    });
+
+    it('should apply search query if provided', async () => {
+      const options: PaginationOptions = { page: 1, limit: 10, q: 'Empresa' };
+      const mockEmpresas = [{ id: 1, razonSocial: 'Empresa 1', cuit: '123' }] as Empresa[];
+      const total = 1;
+      jest.spyOn(empresaRepo, 'findAndCount').mockResolvedValue([mockEmpresas, total]);
+
+      const result = await repository.findAll(options);
+
+      expect(empresaRepo.findAndCount).toHaveBeenCalledWith({
+        skip: 0,
+        take: 10,
+        where: {
+          cuit: Like('%Empresa%'),
+          razonSocial: Like('%Empresa%'),
+        },
+      });
+      expect(result).toEqual({
+        data: mockEmpresas,
+        total,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      });
+    });
+
+    it('should handle empty result', async () => {
+      const options: PaginationOptions = { page: 1, limit: 10, q: '' };
+      const mockEmpresas = [] as Empresa[];
+      const total = 0;
+      jest.spyOn(empresaRepo, 'findAndCount').mockResolvedValue([mockEmpresas, total]);
+
+      const result = await repository.findAll(options);
+
+      expect(empresaRepo.findAndCount).toHaveBeenCalledWith({
+        skip: 0,
+        take: 10,
+        where: {},
+      });
+      expect(result).toEqual({
+        data: mockEmpresas,
+        total,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+      });
     });
   });
 
   describe('findEmpresasConTransferenciasUltimoMes', () => {
-    it('should use createQueryBuilder to find empresas with transfers in the last month and map transfer data', async () => {
+    it('should use createQueryBuilder to find empresas with transfers in the given date range and map transfer data', async () => {
       const mockRawResults = [
         { empresaId: 1, importe: 1000, ultimaTransferencia: new Date('2024-04-01') },
-        { empresaId: 2, importe: 2000, ultimaTransferencia: new Date('2024-04-02') }
+        { empresaId: 2, importe: 2000, ultimaTransferencia: new Date('2024-04-02') },
       ];
-  
+
       const mockEmpresas = [
         { id: 1, razonSocial: 'Empresa 1', cuit: '123', fechaAdhesion: new Date('2023-01-01') },
-        { id: 2, razonSocial: 'Empresa 2', cuit: '456', fechaAdhesion: new Date('2023-02-01') }
+        { id: 2, razonSocial: 'Empresa 2', cuit: '456', fechaAdhesion: new Date('2023-02-01') },
       ] as Empresa[];
-  
-      const mockQueryBuilder = {
+
+      const mockQueryBuilder: Partial<SelectQueryBuilder<Transferencia>> = {
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue(mockRawResults),
       };
-      transferenciaRepo.createQueryBuilder.mockReturnValue(mockQueryBuilder);
-      empresaRepo.findBy.mockResolvedValue(mockEmpresas);
-  
-      const result = await repository.findEmpresasConTransferenciasUltimoMes();
-  
+      jest.spyOn(transferenciaRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as SelectQueryBuilder<Transferencia>);
+      jest.spyOn(empresaRepo, 'findBy').mockResolvedValue(mockEmpresas);
+
+      const fechaInicio = new Date('2024-04-01');
+      const fechaFin = new Date('2024-04-30');
+      const result = await repository.findEmpresasConTransferenciasUltimoMes(
+        fechaInicio,
+        fechaFin,
+      );
+
       expect(transferenciaRepo.createQueryBuilder).toHaveBeenCalledWith('transferencias');
       expect(mockQueryBuilder.select).toHaveBeenCalledWith([
         'transferencias.idEmpresa AS empresaId',
         'SUM(transferencias.importe) AS importe',
-        'MAX(transferencias.fechaTransferencia) AS ultimaTransferencia'
+        'MAX(transferencias.fechaTransferencia) AS ultimaTransferencia',
       ]);
       expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'transferencias.fechaTransferencia BETWEEN :ultimoMesInicio AND :ultimoMesFin',
-        expect.any(Object)
+        'transferencias.fechaTransferencia BETWEEN :fechaInicio AND :fechaFin',
+        { fechaInicio, fechaFin },
       );
       expect(mockQueryBuilder.groupBy).toHaveBeenCalledWith('transferencias.idEmpresa');
       expect(mockQueryBuilder.getRawMany).toHaveBeenCalled();
       expect(empresaRepo.findBy).toHaveBeenCalledWith({ id: In([1, 2]) });
-  
-      // Acá ahora esperás empresa + importe + ultimaTransferencia
+
       expect(result).toEqual([
         {
           ...mockEmpresas[0],
           importe: 1000,
-          ultimaTransferencia: new Date('2024-04-01')
+          ultimaTransferencia: new Date('2024-04-01'),
         },
         {
           ...mockEmpresas[1],
           importe: 2000,
-          ultimaTransferencia: new Date('2024-04-02')
-        }
+          ultimaTransferencia: new Date('2024-04-02'),
+        },
       ]);
     });
-  
-    it('should return an empty array if no transfers in the last month', async () => {
-      const mockQueryBuilder = {
+
+    it('should return an empty array if no transfers in the given date range', async () => {
+      const mockQueryBuilder: Partial<SelectQueryBuilder<Transferencia>> = {
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([]),
       };
-      transferenciaRepo.createQueryBuilder.mockReturnValue(mockQueryBuilder);
-  
-      const result = await repository.findEmpresasConTransferenciasUltimoMes();
+      jest.spyOn(transferenciaRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as SelectQueryBuilder<Transferencia>);
+
+
+      const fechaInicio = new Date('2024-04-01');
+      const fechaFin = new Date('2024-04-30');
+      const result = await repository.findEmpresasConTransferenciasUltimoMes(
+        fechaInicio,
+        fechaFin,
+      );
       expect(result).toEqual([]);
     });
+
+    it('should handle errors from transferenciaRepository', async () => {
+      const fechaInicio = new Date('2024-04-01');
+      const fechaFin = new Date('2024-04-30');
+      const mockQueryBuilder: Partial<SelectQueryBuilder<Transferencia>> = {
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockRejectedValue(new Error('Simulated error')),
+      };
+      jest.spyOn(transferenciaRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as SelectQueryBuilder<Transferencia>);
+
+      await expect(
+        repository.findEmpresasConTransferenciasUltimoMes(fechaInicio, fechaFin),
+      ).rejects.toThrowError(BadRequestException);
+    });
   });
-  
 
   describe('findEmpresasAdheridasUltimoMes', () => {
-    it('should find empresas adhered within the last month', async () => {
-      empresaRepo.count.mockResolvedValue(1); // Mock count to avoid empty array early return
+    it('should find empresas adhered within the given date range', async () => {
       const mockEmpresas = [{ id: 1 }] as Empresa[];
-      empresaRepo.find.mockResolvedValue(mockEmpresas);
+      jest.spyOn(empresaRepo, 'find').mockResolvedValue(mockEmpresas);
+      const fechaInicio = new Date('2024-04-01');
+      const fechaFin = new Date('2024-04-30');
 
-      const result = await repository.findEmpresasAdheridasUltimoMes();
+      const result = await repository.findEmpresasAdheridasUltimoMes(fechaInicio, fechaFin);
       expect(empresaRepo.find).toHaveBeenCalledWith({
         where: {
-          fechaAdhesion: Between(expect.any(Date), expect.any(Date)),
+          fechaAdhesion: Between(fechaInicio, fechaFin),
         },
       });
       expect(result).toEqual(mockEmpresas);
     });
 
-    it('should return an empty array if no empresas exist', async () => {
-      empresaRepo.count.mockResolvedValue(0);
-      const result = await repository.findEmpresasAdheridasUltimoMes();
-      expect(empresaRepo.find).not.toHaveBeenCalled();
+    it('should return an empty array if no empresas adhered in the given date range', async () => {
+      jest.spyOn(empresaRepo, 'find').mockResolvedValue([]);
+      const fechaInicio = new Date('2024-04-01');
+      const fechaFin = new Date('2024-04-30');
+      const result = await repository.findEmpresasAdheridasUltimoMes(fechaInicio, fechaFin);
+      expect(empresaRepo.find).toHaveBeenCalledWith({
+        where: {
+          fechaAdhesion: Between(fechaInicio, fechaFin),
+        },
+      });
       expect(result).toEqual([]);
     });
+
+    it('should handle errors from empresaRepository', async () => {
+      const fechaInicio = new Date('2024-04-01');
+      const fechaFin = new Date('2024-04-30');
+      jest.spyOn(empresaRepo, 'find').mockRejectedValue(new Error('Simulated error'));
+
+      await expect(
+        repository.findEmpresasAdheridasUltimoMes(fechaInicio, fechaFin),
+      ).rejects.toThrowError(BadRequestException);
+    });
   });
- 
 });
+
